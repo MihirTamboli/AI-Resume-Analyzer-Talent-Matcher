@@ -1,107 +1,137 @@
-[README.md](https://github.com/user-attachments/files/33660561/README.md)
 # Lumen
 
-Lumen is a client-side application that compares a resume with a job description and returns a weighted fit score, a skill-gap analysis, structural checks, and draft language for a tailored application. Document text is extracted and scored in the browser. Resume files are not uploaded to an application server.
+> **Lumen** is a privacy-first, client-side application that compares a resume with a job description to deliver a weighted fit score, granular skill-gap analysis, structural ATS health checks, and tailored draft application language. 
 
-The project replaces an earlier Flask implementation. That version accepted PDF uploads only, used a short fixed skill list, and exposed a results export that did not retain the analysis. The current application accepts PDF, DOCX, and plain text, uses a broader skill lexicon, and produces the report in the same session.
+All document text extraction and scoring happen directly in your browser. Resume files are never uploaded to an application server.
 
-## Capabilities
+---
+
+## 🚀 Overview & Evolution
+
+Lumen is a modern rewrite replacing an earlier Flask implementation. 
+* **Previous Implementation:** Accepted PDF uploads only, relied on a short fixed skill list, and exposed a results export that did not retain the analysis session.
+* **Current Application:** Accepts **PDF, DOCX, and plain text (up to 8 MB)**, utilizes a comprehensive technical and professional skill lexicon, and generates persistent reports entirely within your browser session.
+
+---
+
+## 💡 Capabilities
 
 | Capability | Behavior |
-| --- | --- |
-| Resume input | Paste text, or import PDF, DOCX, or TXT up to 8 MB. Image-only PDFs produce an error asking for pasted text. |
-| Job description | Free-text input. A sample product-management posting is provided. |
-| Fit score | A single 0–100 score with component scores for skills, role, and experience. |
-| Weights | Skills, role, and experience weights are normalized to 100. Presets are Classic (50/30/20), Skills first (70/15/15), and Leadership (30/45/25). |
-| Skill gaps | Skills present in the posting and absent from the resume, grouped by category and ordered by frequency in the posting. |
-| Structural checks | Contact details, length, quantified lines, opening verbs, standard sections, first-person usage, stock phrases, and extractable text. |
-| Bullet revision | On-device rewrites of weak bullet openers. Unknown quantities remain as `[metric]` placeholders. |
-| Cover note | A short draft based only on detected overlap. It does not introduce employers, dates, or metrics that are not in the source text. |
-| History | Up to eight analyses stored in `localStorage` for the current browser. Entries can be reopened, removed, or cleared. |
-| Export | Copy a Markdown report, or print the results view. |
-| Optional model rewrite | A single user-initiated request. The model is instructed not to invent employers, titles, dates, degrees, or metrics. |
+| :--- | :--- |
+| **Resume Input** | Paste text directly, or import PDF, DOCX, or TXT files up to 8 MB. Image-only PDFs trigger an explicit prompt to paste text. |
+| **Job Description** | Free-text input with a built-in sample product-management posting provided for testing. |
+| **Fit Score** | A comprehensive 0–100 score featuring individual component breakdowns for **Skills**, **Role**, and **Experience**. |
+| **Weight Presets** | Weights are normalized to 100. Built-in presets include **Classic** (50/30/20), **Skills first** (70/15/15), and **Leadership** (30/45/25). |
+| **Skill Gaps** | Identifies skills present in the job posting but missing from the resume, categorized and ordered by frequency of appearance. |
+| **Structural Checks** | Evaluates 8 key criteria: contact details, word count/length, quantified lines, opening action verbs, standard sections, first-person usage, stock phrases, and extractable text. |
+| **Bullet Revision** | On-device rewrites of weak bullet openers. Unknown numerical values remain as `[metric]` placeholders. |
+| **Cover Note** | Generates a concise draft note based strictly on detected overlap. Does not invent employers, dates, or metrics absent from source texts. |
+| **Session History** | Stores up to eight recent analyses in browser `localStorage`. Entries can be easily reopened, removed, or cleared completely. |
+| **Export Options** | Copy the full analysis as a Markdown report or print/save the results view directly. |
+| **Optional Model Rewrite** | A single user-initiated network request for AI-assisted rewrites. Constrained strictly to avoid inventing career history or metrics. |
 
-Two fixtures are included for comparison. **Strong sample** pairs a Python résumé with a Python developer posting. **Stretch sample** pairs a marketing résumé with the same posting.
+---
 
-## Scoring
+## 📊 Scoring & Methodology
 
-The overall score is:
+The overall score is calculated dynamically via the formula:
+
+$$\text{overall} = \frac{\text{skill} \times w_{\text{skills}} + \text{role} \times w_{\text{role}} + \text{experience} \times w_{\text{experience}}}{100}$$
+
+Where $w_{\text{skills}}$, $w_{\text{role}}$, and $w_{\text{experience}}$ are integers summing to 100 (default: 50, 30, and 20).
+
+### Score Components
+
+| Component | Calculation Method | Included in Overall Score? |
+| :--- | :--- | :--- |
+| **Skills** | Ratio of posting skills found on the resume, scaled by 1.5 and capped at 100. Falls back to keyword overlap if the posting contains no lexicon skills. | **Yes** |
+| **Role** | Best similarity match between detected job titles using a synonym map (bare title tokens are not treated as full role matches). | **Yes** |
+| **Experience** | Stated years (or longest employment date span on the resume) combined equally with degree level (doctorate, master's, bachelor's, or other). | **Yes** |
+| **Semantic Overlap** | Cosine similarity of unigram term frequencies. | No |
+| **Keyword Overlap** | Overlap among distinctive terms after stop-word removal. | No |
+| **Structural Health** | Percentage share of the eight parser/skim checks that pass successfully. | No |
+
+### Score Bands
+
+* **85–100:** Strong fit
+* **70–84:** Competitive
+* **55–69:** Stretch
+* **0–54:** Rework first
+
+> **Lexicon Coverage:** The built-in lexicon covers programming languages, web/data tooling, cloud platforms, testing frameworks, design, product management, and marketing terms. Generic soft-skill phrases are intentionally excluded to prevent artificial score inflation.
+
+---
+
+## 🔒 Data Handling & Privacy
+
+* **Local-First Processing:** Parsing, scoring, bullet revision, cover note generation, and history management occur entirely within your browser. 
+* **History Management:** Local storage retains up to eight records and is completely removed when cleared by the user. Data is never transmitted during ordinary page loads.
+* **Model Rewrite API:** The optional model rewrite is the sole network call requiring resume and posting payloads. It triggers only upon explicit user action, sends a truncated payload, and does not persist responses on any server controlled by this application. If provider quotas are exhausted, the interface gracefully informs the user that live rewrites are unavailable while preserving local analysis.
+
+---
+
+## 🛠️ Tech Stack & Repository Layout
+
+### Built With
+* **Framework & UI:** React 19, TanStack Start, Tailwind CSS 4
+* **Document Extraction:** `unpdf` (PDF), `mammoth` (DOCX)
+* **Visualizations:** Recharts
+* **Typography:** Fraunces (Display), Outfit (UI)
+
+### Repository Structure
 
 ```text
-overall = (skill × wSkills + role × wRole + experience × wExperience) / 100
+src/
+├── routes/index.tsx          # Route entry point
+├── components/
+│   ├── studio.tsx            # Input, weighting, history, and report UI
+│   └── score-ring.tsx        # Score display ring component
+├── styles.css                # Color, typography, and surface design tokens
+└── lib/
+    └── analyzer/
+        ├── engine.ts         # Scoring, health checks, local rewrites, cover notes
+        ├── lexicon.ts        # Skill patterns, action verbs, and stop words
+        ├── extract.ts        # PDF, DOCX, and plain-text file extraction
+        ├── samples.ts        # Sample resume and posting test fixtures
+        ├── history.ts        # localStorage history manager
+        └── coach.ts          # Optional model rewrite integration
 ```
 
-`wSkills`, `wRole`, and `wExperience` are integers that sum to 100. The default weights are 50, 30, and 20.
+---
 
-| Component | Method | Included in overall score |
-| --- | --- | --- |
-| Skills | Ratio of posting skills found on the résumé, scaled by 1.5 and capped at 100. If the posting names no lexicon skills, keyword overlap is used instead. | Yes |
-| Role | Best similarity between detected titles, using a small synonym map. A bare title token is not treated as a full role match. | Yes |
-| Experience | Stated years, or the longest employment date span on the résumé, combined equally with degree level (doctorate, master's, bachelor's, other). | Yes |
-| Semantic overlap | Cosine similarity of unigram term frequencies. | No |
-| Keyword overlap | Overlap among distinctive terms after stop-word removal. | No |
-| Structural health | Share of eight checks that pass. | No |
+## ⚙️ Getting Started & Scripts
 
-Score bands:
+### Prerequisites
+* **Node.js** version 22 or later
+* **npm**
 
-| Range | Label |
-| --- | --- |
-| 85–100 | Strong fit |
-| 70–84 | Competitive |
-| 55–69 | Stretch |
-| 0–54 | Rework first |
-
-The lexicon covers programming languages, web and data tooling, cloud platforms, testing, design, product, and marketing terms. Generic soft-skill phrases are excluded so they do not raise the skill score.
-
-## Data handling
-
-Parsing, scoring, bullet revision, the cover note, and history remain in the browser. History is limited to eight records and is removed when the user clears it. It is not transmitted with ordinary page loads.
-
-The model rewrite is the only network call that includes résumé and posting text. It runs only after an explicit action, sends a truncated payload, and does not persist the response on a server controlled by this application. If the provider rejects the call because the quota is exhausted, the interface reports that the live rewrite is unavailable and leaves the local analysis in place.
-
-## Requirements and scripts
-
-- Node.js 22 or later
-- npm
+### Installation
 
 ```bash
+# Clone the repository and install dependencies
 npm install
+
+# Start the development server (binds to 0.0.0.0:8080)
 npm run dev
 ```
 
-The development server binds to `0.0.0.0:8080`.
+### Available Scripts
 
 | Script | Purpose |
-| --- | --- |
-| `npm run dev` | Development server |
-| `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
-| `npm run build` | Production build for the Vercel (Nitro) target |
-| `npm run preview` | Serve the production build |
+| :--- | :--- |
+| `npm run dev` | Starts the local development server |
+| `npm run typecheck` | Runs TypeScript type checking (`tsc --noEmit`) |
+| `npm run build` | Generates a production build optimized for the Vercel (Nitro) target |
+| `npm run preview` | Serves the production build locally |
 
-The production build does not require a database. Publishing the built application deploys it to Vercel.
+> **Deployment:** The production build is stateless and requires no backend database. Publishing the built application deploys seamlessly to Vercel.
 
-## Repository layout
+---
 
-```text
-src/routes/index.tsx           Route entry
-src/components/studio.tsx      Input, weighting, history, and report UI
-src/components/score-ring.tsx  Score display
-src/styles.css                 Color, type, and surface tokens
-src/lib/analyzer/engine.ts     Scoring, health checks, local rewrites, cover note
-src/lib/analyzer/lexicon.ts    Skill patterns, verbs, and stop words
-src/lib/analyzer/extract.ts    PDF, DOCX, and plain-text extraction
-src/lib/analyzer/samples.ts    Sample résumé and posting text
-src/lib/analyzer/history.ts    localStorage history
-src/lib/analyzer/coach.ts      Optional model rewrite
-```
+## ⚠️ Limitations & Edge Cases
 
-PDF text is extracted with `unpdf`. DOCX text is extracted with `mammoth`. Component charts use Recharts. The interface is React 19, TanStack Start, and Tailwind CSS 4. Display type is Fraunces; UI type is Outfit.
-
-## Limitations
-
-- Skills are recognized from the lexicon and aliases, not from an open-ended ontology. An unrecognized tool is omitted from the skill score.
-- Image-only or scanned PDFs cannot be read. The user must paste the text.
-- Legacy `.doc` files are not supported. DOCX is supported.
-- Date-span estimates use the longest single range. They do not sum overlapping roles.
-- Local bullet rewrites change structure and verbs. They do not supply missing facts.
-- The model rewrite, when available, is constrained not to fabricate career facts. Placeholders are used where a number is absent.
+* **Lexicon Boundaries:** Skills are recognized strictly via the built-in lexicon and aliases rather than an open-ended ontology. Unrecognized custom tools are omitted from the skill score.
+* **Scanned PDFs:** Image-only or scanned PDFs cannot be read automatically; users must paste the extracted text manually.
+* **File Formats:** Legacy `.doc` files are not supported (only `.docx`, `.pdf`, and `.txt`).
+* **Date Spans:** Employment date-span estimates rely on the single longest continuous range and do not sum overlapping concurrent roles.
+* **Bullet Rewrites:** Local bullet revisions update structure and verbs but cannot fabricate missing career facts or metrics.

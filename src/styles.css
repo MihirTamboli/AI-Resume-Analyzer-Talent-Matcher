@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Outfit", "Avenir Next", system-ui, sans-serif;
+
+  --color-bg: #07090c;
+  --color-surface: #12171c;
+  --color-surface-2: #1b232b;
+  --color-fg: #eef3f6;
+  --color-muted: #9aabba;
+  --color-subtle: #738494;
+  --color-accent: #9eb8c9;
+  --color-accent-fg: #071014;
+  --color-line: #2a3844;
+  --color-good: #8fbfa8;
+  --color-warn: #d2b48a;
+  --color-bad: #e09a9a;
+
+  --radius-control: 0.75rem;
+  --radius-card: 1.75rem;
+
+  --shadow-glass: 0 24px 60px rgb(0 0 0 / 0.28);
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  }
+}
+
+.liquid-root {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+
+.liquid-root::before,
+.liquid-root::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  width: 42vw;
+  height: 42vw;
+  min-width: 16rem;
+  min-height: 16rem;
+  border-radius: 999px;
+  filter: blur(72px);
+  pointer-events: none;
+  animation: drift 36s ease-in-out infinite alternate;
+}
+
+.liquid-root::before {
+  top: -8rem;
+  left: -6rem;
+  background: color-mix(in oklab, var(--color-accent) 38%, transparent);
+  opacity: 0.45;
+}
+
+.liquid-root::after {
+  right: -8rem;
+  bottom: -10rem;
+  background: color-mix(in oklab, #d5e2ec 32%, transparent);
+  opacity: 0.28;
+  animation-duration: 44s;
+  animation-direction: alternate-reverse;
+}
+
+.glass {
+  background: color-mix(in oklab, var(--color-surface) 84%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-fg) 12%, transparent);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+
+.score-arc {
+  transition: stroke-dashoffset 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+input[type="range"] {
+  accent-color: var(--color-accent);
+  width: 100%;
+  height: 1.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-root::before,
+  .liquid-root::after,
+  .score-arc {
+    animation: none;
+    transition: none;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4vw, 3vw, 0) scale(1.06);
+  }
+}
+
+@media print {
+  .no-print,
+  .liquid-root::before,
+  .liquid-root::after {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: #111;
+  }
+
+  .glass {
+    background: white;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+}
